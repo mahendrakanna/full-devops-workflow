@@ -40,7 +40,7 @@ Make sure you have the following installed:
 
 ## 🚀 Getting Started
 
-### 1️⃣ Clone the repository
+### 1 Clone the repository
 ```bash
 git clone https://github.com/<your-username>/full-devops-pipeline.git
 cd full-devops-pipeline
@@ -70,6 +70,58 @@ This repository will include:
 Terraform for provisioning EKS
 Kubernetes manifests for deployment
 GitHub Actions for CI/CD automation
+
+🛠 Step 2 — Deploy AWS EKS with Terraform
+
+cd terraform-eks
+terraform init
+terraform plan
+terraform apply -auto-approve
+
+After creation
+
+aws eks update-kubeconfig --region us-east-1 --name devops-demo-cluster
+kubectl get nodes
+
+Next Step
+Step 3 will add:
+
+Kubernetes Deployment & Service
+CI/CD pipeline to build → push to JFrog → deploy to EKS
+
+kubectl create secret docker-registry jfrog-docker-secret \
+  --namespace devops-demo \
+  --docker-server=YOUR_REGISTRY \
+  --docker-username=YOUR_USERNAME \
+  --docker-password=YOUR_PASSWORD_OR_TOKEN \
+  --docker-email=you@example.com
+
+Example YOUR_REGISTRY: mycompany.jfrog.io
+
+Apply EKS
+aws eks update-kubeconfig --region us-east-1 --name devops-demo-cluster
+kubectl get nodes
+
+Apply all manifest
+
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/hpa.yaml
+# kubectl apply -f k8s/ingress.yaml   # if using ingress
+
+Check rollouts
+kubectl -n devops-demo rollout status deployment/devops-app
+kubectl -n devops-demo get all
+
+
+How it works
+You push code → GitHub Actions triggers.
+AWS creds authenticate to EKS.
+Docker image builds & pushes to JFrog.
+Kubernetes deployment updates to new image.
+Zero-downtime rollout.
+
 
 👨‍💻 Author
 Your Mahendra
