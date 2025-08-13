@@ -1,0 +1,49 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER: devops-demo-cluster
+  IMAGE_NAME: devops-demo-app
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to JFrog Docker registry
+      run: |
+        echo "${{ secrets.JFROG_PASSWORD }}" | docker login ${{ secrets.JFROG_REGISTRY }} \
+          -u ${{ secrets.JFROG_USERNAME }} --password-stdin
+
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.JFROG_REGISTRY }}/${{ secrets.JFROG_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
+
+    - name: Push Docker image to JFrog
+      run: |
+        docker push ${{ secrets.JFROG_REGISTRY }}/${{ secrets.JFROG_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+    - name: Update kubeconfig for EKS
+      run: |
+        aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
+
+    - name: Deploy to EKS
+      run: |
+        kubectl set image deployment/devops-app devops-app=${{ secrets.JFROG_REGISTRY }}/${{ secrets.JFROG_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -n devops-demo
+        kubectl rollout status deployment/devops-app -n devops-demo
