@@ -71,7 +71,7 @@ Terraform for provisioning EKS
 Kubernetes manifests for deployment
 GitHub Actions for CI/CD automation
 
-🛠 Step 2 — Deploy AWS EKS with Terraform
+### 🛠 Step 2 — Deploy AWS EKS with Terraform
 
 cd terraform-eks
 terraform init
@@ -83,8 +83,8 @@ After creation
 aws eks update-kubeconfig --region us-east-1 --name devops-demo-cluster
 kubectl get nodes
 
-Next Step
-Step 3 will add:
+###Next Step
+###Step 3 will add:
 
 Kubernetes Deployment & Service
 CI/CD pipeline to build → push to JFrog → deploy to EKS
